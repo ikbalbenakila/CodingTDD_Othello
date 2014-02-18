@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Otello
+﻿namespace Otello
 {
-    class Othello
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+
+    public class Othello
     {
         private CaseState _currentPlayerColor;
+
         private CaseState[,] _gameState;
 
         public Othello(CaseState firstPlayerColor = CaseState.White)
@@ -68,6 +69,11 @@ namespace Otello
                         }
 
                         Position pieceOfMyColorOnSameDiagonal = SearchForMyColorOnSameDiagonal(currentPosition);
+
+                        if (pieceOfMyColorOnSameDiagonal != null)
+                        {
+                            _gameState[pieceOfMyColorOnSameDiagonal.X, pieceOfMyColorOnSameDiagonal.Y] = CaseState.Available;
+                        }
                     }
                 }
             }
@@ -82,106 +88,44 @@ namespace Otello
 
         private Position SearchForMyColorOnSameColumn(Position currentPosition)
         {
-            // trouve une piece de ma couleur sur la meme ligne.
-            var gameState = _gameState;
-
-            var position = new Position() { X = currentPosition.X, Y = currentPosition.Y };
-            bool pieceIsFound = false;
-
-            while (position.Y < 7)
-            {
-                position.Y = position.Y + 1;
-                var state = gameState[position.X, position.Y];
-
-                if (state == _currentPlayerColor)
-                {
-                    pieceIsFound = true;
-                    break;
-                }
-            }
-
-            if (!pieceIsFound)
-            {
-                while (position.Y > 0)
-                {
-                    position.Y = position.Y - 1;
-                    var state = gameState[position.X, position.Y];
-
-                    if (state == _currentPlayerColor)
-                    {
-                        pieceIsFound = true;
-                        break;
-                    }
-                } 
-            }
-
-            // cherche dans l'autre direction une case vide et si trouve => free
-            // search free left
-            if (pieceIsFound && position.Y > currentPosition.Y)
-            {
-                while (position.Y > 0)
-                {
-                    position.Y = position.Y - 1;
-                    var state = gameState[position.X, position.Y];
-
-                    if (state == CaseState.Free)
-                    {
-                        return position;
-                    }
-                }
-
-                return null;
-            }
-            else if (pieceIsFound && position.Y < currentPosition.Y)
-            {
-                while (position.Y < 7)
-                {
-                    position.Y = position.Y + 1;
-                    var state = gameState[position.X, position.Y];
-
-                    if (state == CaseState.Free)
-                    {
-                        return position;
-                    }
-                } 
-
-                return null;
-            }
-
-            // return cette position
-            return position;
+            var position = new Position { X = currentPosition.X, Y = currentPosition.Y };
+            return CalculateAvailablePosition(Direction.Vertical, currentPosition.Y, position, position.Y);
         }
 
         private Position SearchForMyColorOnSameLine(Position currentPosition)
         {
-            // trouve une piece de ma couleur sur la meme ligne.
+            var position = new Position {X = currentPosition.X, Y = currentPosition.Y};
+            return CalculateAvailablePosition(Direction.Horizontal, currentPosition.X, position, position.X);
+        }
+
+        private Position CalculateAvailablePosition(Direction direction, int currentPositionCoordToStudy, Position position, int coordToStudy)
+        {
             var gameState = _gameState;
 
-            var position = new Position() {X = currentPosition.X, Y = currentPosition.Y};
-            bool pieceIsFound = false;
+            bool isPieceFound = false;
 
-            while (position.X < 7)
+            while (coordToStudy < 7)
             {
-                position.X = position.X + 1;
-                var state = gameState[position.X, position.Y];
+                coordToStudy += 1;
+                var state = direction == Direction.Horizontal ? gameState[coordToStudy, position.Y] : gameState[position.X, coordToStudy];
 
                 if (state == _currentPlayerColor)
                 {
-                    pieceIsFound = true;
+                    isPieceFound = true;
                     break;
                 }
-            } 
+            }
 
-            if (!pieceIsFound)
+            if (!isPieceFound)
             {
-                while (position.X > 0)
+                while (coordToStudy > 0)
                 {
-                    position.X = position.X - 1;
-                    var state = gameState[position.X, position.Y];
+                    coordToStudy -= 1;
+                    var state = direction == Direction.Horizontal ? gameState[coordToStudy, position.Y] : gameState[position.X, coordToStudy];
 
                     if (state == _currentPlayerColor)
                     {
-                        pieceIsFound = true;
+                        isPieceFound = true;
                         break;
                     }
                 }
@@ -189,38 +133,43 @@ namespace Otello
 
             // cherche dans l'autre direction une case vide et si trouve => free
             // search free left
-            if (pieceIsFound && position.X > currentPosition.X)
+            if (isPieceFound && coordToStudy > currentPositionCoordToStudy)
             {
-                while (position.X > 0)
+                while (coordToStudy > 0)
                 {
-                    position.X = position.X - 1;
-                    var state = gameState[position.X, position.Y];
+                    coordToStudy -= 1;
+                    var state = direction == Direction.Horizontal ? gameState[coordToStudy, position.Y] : gameState[position.X, coordToStudy];
 
                     if (state == CaseState.Free)
                     {
-                        return position;
+                        break;
                     }
                 }
-
-                return null;
             }
-            else if (pieceIsFound && position.X < currentPosition.X)
+            else if (isPieceFound && coordToStudy < currentPositionCoordToStudy)
             {
-                while (position.X < 7)
+                while (coordToStudy < 7)
                 {
-                    position.X = position.X + 1;
-                    var state = gameState[position.X, position.Y];
+                    coordToStudy += 1;
+                    var state = direction == Direction.Horizontal ? gameState[coordToStudy, position.Y] : gameState[position.X, coordToStudy];
 
                     if (state == CaseState.Free)
                     {
-                        return position;
+                        break;
                     }
                 }
-
-                return null;
             }
 
             // return cette position
+            if (direction == Direction.Horizontal)
+            {
+                position.X = coordToStudy;
+            }
+            else
+            {
+                position.Y = coordToStudy;
+            }
+
             return position;
         }
     }
