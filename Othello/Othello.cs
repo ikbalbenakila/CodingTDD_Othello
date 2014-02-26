@@ -16,7 +16,7 @@
             _currentPlayerColor = firstPlayerColor;
             _gameState = new CaseState[8,8];
 
-            _gameState[4, 4] = CaseState.Black;
+            _gameState[4, 4] =  CaseState.Black;
             _gameState[4, 5] = CaseState.White;
             _gameState[5, 4] = CaseState.White;
             _gameState[5, 5] = CaseState.Black;
